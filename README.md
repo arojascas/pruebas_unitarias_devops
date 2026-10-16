@@ -1,148 +1,160 @@
-# 🎯 PROYECTO: PRUEBAS UNITARIAS - CÓDIGO
+# Informe — Análisis y Mejora de Pruebas Unitarias
+
+## 1. Datos
+
+- **Nombre:** Alejandro Rojas Casas
 
 ---
 
-## 📁 ESTRUCTURA DEL PROYECTO
+## 2. Módulo `calculadora.py`
 
-```
-proyecto-pruebas-unitarias/
-├── src/
-│   ├── __init__.py
-│   ├── calculadora.py              # Operaciones matemáticas básicas
-│   ├── validador.py                # Validación de datos
-│   ├── procesador_texto.py         # Procesamiento de texto
-│   ├── fibonacci.py                # Algoritmo de Fibonacci
-│   ├── descuentos.py               # Cálculo de descuentos
-│   ├── utils.py                    # Funciones utilitarias
-│   ├── autenticacion.py            # Autenticación y seguridad
-│   ├── conversor.py                # Conversión de unidades
-│   ├── csv_parser.py               # Parsing de archivos CSV
-│   └── manipulador_texto.py        # Manipulación de cadenas
-├── tests/
-│   ├── __init__.py
-│   ├── test_calculadora.py
-│   ├── test_validador.py
-│   ├── test_procesador_texto.py
-│   ├── test_fibonacci.py
-│   ├── test_descuentos.py
-│   ├── test_utils.py
-│   ├── test_autenticacion.py
-│   ├── test_conversor.py
-│   ├── test_csv_parser.py
-│   └── test_manipulador_texto.py
-├── README.md
-└── requirements.txt
-```
+### 2.1 Qué hace
+Agrupa operaciones matemáticas básicas (`sumar`, `restar`, `multiplicar`, `dividir`, `potencia`, `raiz_cuadrada`), estadísticas sobre listas (`promedio`, `maximo`, `minimo`) y cálculos geométricos de un rectángulo (`calcular_area_rectangulo`, `calcular_perimetro_rectangulo`).
 
----
+### 2.2 Casos probados y por qué
+Escribí 32 pruebas con estructura AAA. Para cada función combiné un caso normal con los casos límite donde el código podía fallar.
 
-## 📋 INSTRUCCIONES 
+| Función | Casos probados | Por qué |
+|---|---|---|
+| `sumar` | positivos, negativos, suma con cero | el cero es el elemento neutro y los negativos prueban el signo |
+| `restar` | resultado negativo | verifica que no asuma resultados positivos |
+| `multiplicar` | por cero, dos negativos | el cero anula el resultado y negativo por negativo da positivo |
+| `dividir` | decimal, negativos, división por cero | la división por cero debe lanzar `ValueError` |
+| `potencia` | exponente positivo, 0 y negativo | el exponente 0 da 1 y el negativo produce una fracción |
+| `raiz_cuadrada` | cuadrado perfecto, cero, no exacto, negativo | el negativo no tiene raíz real; el no exacto exige `pytest.approx` |
+| `promedio` | lista simple, un elemento, lista vacía | la lista vacía provocaría división por cero |
+| `maximo` | positivos, todos negativos, lista vacía | los negativos revelan si el valor inicial está mal elegido |
+| `minimo` | todos positivos, con negativos, un elemento, lista vacía | es el caso que reveló el bug 2 |
+| `calcular_area_rectangulo` | normal, base cero, lado negativo | el cero es el límite válido y el negativo debe lanzar error |
+| `calcular_perimetro_rectangulo` | normal, un lado cero, lado negativo | igual que el área |
 
-### Paso 1: Clonar el repositorio
-```bash
-git clone https://github.com/cesarpalacios/pruebas_unitarias_devops.git
-cd pruebas_unitarias_devops
-```
+### 2.3 Bugs encontrados
 
-### Paso 2: Crear entorno virtual
-```bash
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
+| # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
+|---|---|---|---|---|---|
+| 1 | `raiz_cuadrada` | `-4` | Devuelve un número complejo (`1.2e-16+2j`) sin lanzar error | `ValueError` | Se agregó `if numero < 0: raise ValueError(...)` |
+| 2 | `minimo` | `[5, 3, 8]` y `[10]` | Devuelve `0` | `3` y `10` | `min_val` arrancaba en `0`; ahora arranca en `lista[0]` |
 
-### Paso 3: Instalar dependencias
-```bash
-pip install -r requirements.txt
-```
+**Bug 1:** en Python 3, elevar un negativo a `0.5` no lanza error, devuelve un complejo. Es un bug silencioso: el programa sigue con un valor que el resto del código no espera. Elegí `ValueError` por coherencia con `dividir` y `promedio`.
 
-### Paso 4: Ejecutar pruebas
-```bash
-pytest
-```
+**Bug 2:** `min_val` se iniciaba en `0`. Si todos los números son positivos, ninguno es menor que `0` y la función devuelve `0`, que ni siquiera está en la lista. Con `[4, -7, 2]` sí funcionaba, porque aparece un valor menor que `0`.
 
-### Paso 5: Ver reporte de cobertura
-```bash
-pytest --cov=src --cov-report=html
-```
+### 2.4 Evidencia
+
+![calculadora en rojo](img/calculadora_roja.png)
+
+Pruebas en verde (después de corregir):
+
+![calculadora en verde](img/calculadora_verde.png)
 
 ---
 
-## 🎮 DESAFÍOS
+## 3. Módulo `descuentos.py`
 
-### Desafío 1: El Detective de Bugs
-Hay **14 bugs ocultos** en los archivos de `src/`. Escriban pruebas para encontrarlos y corregirlos.
+### 3.1 Qué hace
+Calcula precios con descuentos e impuestos. Incluye el descuento simple (`aplicar_descuento`, `calcular_descuento`), el cálculo del precio final con impuesto (`calcular_precio_final`), el descuento por volumen según tramos de cantidad (`descuento_por_volumen`) y dos formas de combinar varios descuentos: en cadena (`descuento_cumulativo`) y sumando porcentajes (`descuento_apilado`).
 
-- `calculadora.py`: 2 bugs
-- `validador.py`: 1 bug
-- `procesador_texto.py`: 1 bug
-- `fibonacci.py`: 1 bug
-- `descuentos.py`: 2 bugs
-- `utils.py`: 1 bug
-- `autenticacion.py`: 2 bugs
-- `conversor.py`: 2 bugs
-- `csv_parser.py`: 2 bugs
-- `manipulador_texto.py`: 2 bugs
+### 3.2 Casos probados y por qué
+Escribí 12 funciones de prueba con estructura AAA, que pytest ejecuta como 27 casos porque dos de ellas usan `parametrize`.
 
-### Desafío 2: El Arquitecto de Pruebas
-Cada prueba debe seguir la estructura AAA (Arrange, Act, Assert).
+| Función | Casos probados | Por qué |
+|---|---|---|
+| `aplicar_descuento` | descuento normal (20 %), descuento del 100 % | el 100 % es el límite superior válido y debe dar 0 |
+| `calcular_descuento` | descuento normal (25 %) | devuelve el monto del descuento y no el precio final, así que necesita su propia prueba |
+| `calcular_precio_final` | solo impuesto, descuento e impuesto juntos, descuento del 100 % | combinar ambos es donde se escondía el bug; con 100 % de descuento no debería cobrarse impuesto |
+| `descuento_por_volumen` | un caso en el límite de cada tramo: 9, 10, 20, 50 y 100 unidades | los errores en tramos suelen estar en el borde (`>=` frente a `>`) |
+| `descuento_cumulativo` | dos descuentos en cadena, lista vacía | verifica que cada descuento se aplique sobre el precio ya rebajado y que sin descuentos el precio no cambie |
+| `descuento_apilado` | suma normal de porcentajes, suma que excede el 100 % | el segundo caso reveló el bug 4 |
+| todas las funciones | 12 entradas inválidas (precios, impuestos, porcentajes y cantidades fuera de rango) en una prueba parametrizada | confirma que cada validación lanza `ValueError` |
 
-### Desafío 3: Casos Límite
-Encuentren TODOS los casos límite posibles para cada función.
+### 3.3 Bugs encontrados
 
-### Desafío 4: Cobertura Completa
-Logren una cobertura del 100% en todos los archivos.
+| # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
+|---|---|---|---|---|---|
+| 3 | `calcular_precio_final` | `(100, 10, 20)` y `(100, 10, 100)` | `90` y `10` | `88` y `0` | el impuesto se calculaba sobre `precio` y ahora se calcula sobre `precio_con_descuento` |
+| 4 | `descuento_apilado` | `(100, [60, 50])` | `ValueError` con un mensaje que no corresponde a lo que hizo el usuario | `0` (precio gratis) | se limita el total con `min(total_descuento, 100)` antes de aplicarlo |
+
+**Bug 3:** el código aplica primero el descuento, pero calcula el impuesto sobre el precio original en vez del precio ya rebajado. Con un precio de 100, un descuento del 20 % y un impuesto del 10 %, el resultado correcto es 80 + 8 = 88, pero la función devolvía 80 + 10 = 90. El caso más claro es el del 100 % de descuento: el producto queda gratis y aun así se cobraba impuesto (devolvía 10 en lugar de 0). Lo detectaron `test_precio_final_con_descuento_e_impuesto` y `test_precio_final_con_descuento_total_no_cobra_impuesto`.
+
+**Bug 4:** `descuento_apilado` suma los porcentajes sin comprobar el total. Con `[60, 50]` suma 110, y `aplicar_descuento` rechaza ese valor con el mensaje "El porcentaje debe estar entre 0 y 100", que confunde porque el usuario nunca pasó un 110. Tomé la decisión de diseño de limitar el total al 100 %, de modo que el precio queda en 0, porque el comentario del código describe el problema como que el descuento "puede exceder el 100 %". La alternativa era lanzar un `ValueError` propio con un mensaje claro, que también es válida. Lo detectó `test_descuento_apilado_que_excede_cien_se_limita_a_cien`.
+
+### 3.4 Evidencia
+
+Pruebas en rojo (antes de corregir; fallan 3 casos que corresponden a los 2 bugs):
+
+![descuentos en rojo](img/descuentos_rojo.png)
+
+Pruebas en verde (después de corregir):
+
+![descuentos en verde](img/descuentos_verde.png)
 
 ---
 
-## 🏆 OBJETIVO FINAL
+## 4. Módulo `(tercer_modulo).py`
 
-El ejercicio termina cuando:
+### 4.1 Qué hace
+(...)
 
-1. **Todas las pruebas estén en estado PASSED**
-2. **Todos los 14 bugs hayan sido encontrados y corregidos**
-3. **Se haya alcanzado el 100% de cobertura en los archivos principales**
+### 4.2 Casos probados y por qué
+
+| Función | Casos probados | Por qué |
+|---|---|---|
+| (...) | (...) | (...) |
+
+### 4.3 Bugs encontrados
+
+| # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
+|---|---|---|---|---|---|
+| 5 | (...) | (...) | (...) | (...) | (...) |
+
+**Bug 5:** (...)
+
+### 4.4 Evidencia
+
+![tercer módulo en rojo](img/modulo3_rojo.png)
+
+![tercer módulo en verde](img/modulo3_verde.png)
+
+**Commits relacionados:** (...)
 
 ---
 
-## 📝 EJEMPLO DE PRUEBA
+## 5. Resumen de bugs
 
-```python
-# test_calculadora.py
-import pytest
-from src.calculadora import sumar
+| # | Módulo | Función | Entrada | Erróneo vs esperado | Corrección |
+|---|---|---|---|---|---|
+| 1 | calculadora | `raiz_cuadrada` | `-4` | complejo vs `ValueError` | validar negativos |
+| 2 | calculadora | `minimo` | `[5, 3, 8]` | `0` vs `3` | iniciar en `lista[0]` |
+| 3 | descuentos | (...) | (...) | (...) | (...) |
+| 4 | descuentos | (...) | (...) | (...) | (...) |
+| 5 | (módulo 3) | (...) | (...) | (...) | (...) |
 
-def test_sumar_positivos():
-    """Prueba suma de números positivos."""
-    # Arrange
-    a = 5
-    b = 3
-    resultado_esperado = 8
+---
 
-    # Act
-    resultado = sumar(a, b)
+## 6. Cobertura
 
-    # Assert
-    assert resultado == resultado_esperado
+Comando:
+
+```
+pytest tests/ -v --cov=src --cov-report=term-missing
 ```
 
----
+Salida:
 
-## 💡 CONSEJOS
+```
+(pega aquí la tabla completa)
+```
 
-1. Una prueba, un propósito
-2. Nombres descriptivos
-3. Casos normales, límites y errores
-4. Organización clara
-5. Comentarios cuando sea necesario
-6. Revise el informe de errores y corrija los bugs encontrados
-7. Empiecen con módulos más simples y avancen a los más complejos
+![cobertura](img/cobertura.png)
+
+**Lectura de los resultados:** (qué módulos superaron el 85 %, cuáles quedaron más bajos y por qué, qué aparece en la columna `Miss`)
 
 ---
 
-## 🚀 LISTO PARA EMPEZAR
+## 7. Reflexión final
 
-¡Comiencen a escribir pruebas, encuentren los 14 bugs ocultos y corrijan el código hasta que todas las pruebas pasen!
+**¿Qué NO mide la cobertura?**
+(...)
 
----
-
-**Buena suerte!** 🎯
+**¿Qué aprendí?**
+(...)
