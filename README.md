@@ -1,17 +1,17 @@
 # Informe — Análisis y Mejora de Pruebas Unitarias
 
-## 1. Datos
+## Datos
 
 - **Nombre:** Alejandro Rojas Casas
 
 ---
 
-## 2. Módulo `calculadora.py`
+## 1. Módulo `calculadora.py`
 
-### 2.1 Qué hace
+### 1.1 Qué hace
 Agrupa operaciones matemáticas básicas (`sumar`, `restar`, `multiplicar`, `dividir`, `potencia`, `raiz_cuadrada`), estadísticas sobre listas (`promedio`, `maximo`, `minimo`) y cálculos geométricos de un rectángulo (`calcular_area_rectangulo`, `calcular_perimetro_rectangulo`).
 
-### 2.2 Casos probados y por qué
+### 1.2 Casos probados y por qué
 Escribí 32 pruebas con estructura AAA. Para cada función combiné un caso normal con los casos límite donde el código podía fallar.
 
 | Función | Casos probados | Por qué |
@@ -28,7 +28,7 @@ Escribí 32 pruebas con estructura AAA. Para cada función combiné un caso norm
 | `calcular_area_rectangulo` | normal, base cero, lado negativo | el cero es el límite válido y el negativo debe lanzar error |
 | `calcular_perimetro_rectangulo` | normal, un lado cero, lado negativo | igual que el área |
 
-### 2.3 Bugs encontrados
+### 1.3 Bugs encontrados
 
 | # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
 |---|---|---|---|---|---|
@@ -39,7 +39,7 @@ Escribí 32 pruebas con estructura AAA. Para cada función combiné un caso norm
 
 **Bug 2:** `min_val` se iniciaba en `0`. Si todos los números son positivos, ninguno es menor que `0` y la función devuelve `0`, que ni siquiera está en la lista. Con `[4, -7, 2]` sí funcionaba, porque aparece un valor menor que `0`.
 
-### 2.4 Evidencia
+### 1.4 Evidencia
 
 ![calculadora en rojo](img/calculadora_roja.png)
 
@@ -49,12 +49,12 @@ Pruebas en verde (después de corregir):
 
 ---
 
-## 3. Módulo `descuentos.py`
+## 2. Módulo `descuentos.py`
 
-### 3.1 Qué hace
+### 2.1 Qué hace
 Calcula precios con descuentos e impuestos. Incluye el descuento simple (`aplicar_descuento`, `calcular_descuento`), el cálculo del precio final con impuesto (`calcular_precio_final`), el descuento por volumen según tramos de cantidad (`descuento_por_volumen`) y dos formas de combinar varios descuentos: en cadena (`descuento_cumulativo`) y sumando porcentajes (`descuento_apilado`).
 
-### 3.2 Casos probados y por qué
+### 2.2 Casos probados y por qué
 Escribí 12 funciones de prueba con estructura AAA, que pytest ejecuta como 27 casos porque dos de ellas usan `parametrize`.
 
 | Función | Casos probados | Por qué |
@@ -67,7 +67,7 @@ Escribí 12 funciones de prueba con estructura AAA, que pytest ejecuta como 27 c
 | `descuento_apilado` | suma normal de porcentajes, suma que excede el 100 % | el segundo caso reveló el bug 4 |
 | todas las funciones | 12 entradas inválidas (precios, impuestos, porcentajes y cantidades fuera de rango) en una prueba parametrizada | confirma que cada validación lanza `ValueError` |
 
-### 3.3 Bugs encontrados
+### 2.3 Bugs encontrados
 
 | # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
 |---|---|---|---|---|---|
@@ -78,7 +78,7 @@ Escribí 12 funciones de prueba con estructura AAA, que pytest ejecuta como 27 c
 
 **Bug 4:** `descuento_apilado` suma los porcentajes sin comprobar el total. Con `[60, 50]` suma 110, y `aplicar_descuento` rechaza ese valor con el mensaje "El porcentaje debe estar entre 0 y 100", que confunde porque el usuario nunca pasó un 110. Tomé la decisión de diseño de limitar el total al 100 %, de modo que el precio queda en 0, porque el comentario del código describe el problema como que el descuento "puede exceder el 100 %". La alternativa era lanzar un `ValueError` propio con un mensaje claro, que también es válida. Lo detectó `test_descuento_apilado_que_excede_cien_se_limita_a_cien`.
 
-### 3.4 Evidencia
+### 2.4 Evidencia
 
 Pruebas en rojo (antes de corregir; fallan 3 casos que corresponden a los 2 bugs):
 
@@ -89,33 +89,46 @@ Pruebas en verde (después de corregir):
 ![descuentos en verde](img/descuentos_verde.png)
 
 ---
+## 3. Módulo `conversor.py`
 
-## 4. Módulo `(tercer_modulo).py`
+### 3.1 Qué hace
+Convierte unidades de medida entre sistemas: temperatura (Celsius, Fahrenheit y Kelvin), longitud (metros, kilómetros, millas y pies), masa (libras, kilogramos, onzas y gramos) y volumen (galones y litros). Cada conversión es una función independiente, y las de longitud, masa y volumen rechazan valores negativos con un `ValueError`.
 
-### 4.1 Qué hace
-(...)
+### 3.2 Casos probados y por qué
+Escribí 7 funciones de prueba con estructura AAA, que pytest ejecuta como 53 casos porque varias usan `parametrize`. Usé `pytest.approx` para comparar decimales, porque los números en punto flotante tienen pequeños errores de redondeo y comparar con `==` fallaría sin razón.
 
-### 4.2 Casos probados y por qué
-
-| Función | Casos probados | Por qué |
+| Función(es) | Casos probados | Por qué |
 |---|---|---|
-| (...) | (...) | (...) |
+| Conversiones de temperatura | 100 °C → 212 °F, 0 °C → 32 °F, −40 °C → −40 °F, 212 °F → 100 °C, 0 °C → 273.15 K | son valores de referencia conocidos: ebullición, congelación y el punto donde ambas escalas coinciden |
+| `kelvin_a_celsius` | 0 K → −273.15 °C y −1 K lanza `ValueError` | 0 K es el límite válido (cero absoluto) y −1 K está por debajo de lo físicamente posible; este caso reveló el bug 5 |
+| Las 12 conversiones de longitud, masa y volumen | un valor conocido por función (por ejemplo 10 lb → 4.53592 kg) | verifica que cada factor de conversión esté bien escrito |
+| Las mismas 12 | entrada `0` da `0` | el cero es el límite válido y descarta que la validación esté mal escrita (`<` frente a `<=`) |
+| Las mismas 12 | entrada `-1` lanza `ValueError` | confirma que todas las validaciones de valores negativos funcionan |
+| 8 pares de conversiones | ida y vuelta (convertir y regresar al valor original) | si dos conversiones inversas no se cancelan, hay un error de fórmula, y se detecta sin conocer el valor correcto de antemano; así apareció el bug 6 |
+| `kilometros_a_millas` | 100 km ≈ 62.137 mi | prueba dirigida al bug 6 con un valor fácil de verificar |
 
-### 4.3 Bugs encontrados
+### 3.3 Bugs encontrados
 
 | # | Función | Entrada que lo revela | Resultado erróneo | Resultado esperado | Corrección |
 |---|---|---|---|---|---|
-| 5 | (...) | (...) | (...) | (...) | (...) |
+| 5 | `kelvin_a_celsius` | `-1` | `-274.15` (sin ningún error) | `ValueError` | se agregó `if kelvin < 0: raise ValueError(...)` antes del cálculo |
+| 6 | `kilometros_a_millas` | `100` | `160.934` | `≈ 62.137` | se cambió `kilometros * 1.60934` por `kilometros / 1.60934` |
 
-**Bug 5:** (...)
+**Bug 5:** `kelvin_a_celsius` restaba 273.15 sin comprobar el rango de entrada. El cero absoluto (0 K) es el límite inferior físico, así que un valor negativo en Kelvin no representa ninguna temperatura real. Con `-1` la función devolvía `-274.15 °C`, un valor imposible, sin avisar. Elegí `ValueError` por coherencia con el resto del módulo, donde las demás conversiones ya lo usan para entradas inválidas. Lo detectó `test_kelvin_negativo_lanza_error`.
 
-### 4.4 Evidencia
+**Bug 6:** `kilometros_a_millas` multiplicaba por el factor de conversión de millas a kilómetros en vez de dividir. Como 1 milla equivale a 1.60934 km, pasar de kilómetros a millas exige dividir. Con 100 km devolvía `160.934` cuando el resultado correcto es unas 62.14 millas. Lo detectaron dos pruebas: la dirigida (`test_kilometros_a_millas_cien_km_son_unas_62_millas`) y la de ida y vuelta, donde convertir 26.2 millas a kilómetros y regresar daba `67.857` en lugar de `26.2`, porque el error se aplicaba dos veces.
 
-![tercer módulo en rojo](img/modulo3_rojo.png)
+### 3.4 Evidencia
 
-![tercer módulo en verde](img/modulo3_verde.png)
+Pruebas en rojo (el pantallazo muestra los 2 casos que revelan el bug 6; el bug 5 lo reveló `test_kelvin_negativo_lanza_error`, que describí arriba):
 
-**Commits relacionados:** (...)
+![conversor en rojo](img/conversor_rojo.png)
+
+Pruebas en verde (después de corregir, 53 casos):
+
+![conversor en verde](img/conversor_verde.png)
+
+**Commits relacionados:** `fix: conversor (kelvin_a_celsius y kilometros_a_millas) + pruebas + informe del módulo`.
 
 ---
 
