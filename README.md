@@ -155,18 +155,21 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 
 Salida:
 
-```
-```
-
 ![cobertura](img/cobertura.png)
 
 
 ---
 
-## 7. Reflexión final
+## 6. Reflexión final
 
 **¿Qué NO mide la cobertura?**
-(...)
+
+La cobertura solo mide qué líneas de código se ejecutaron mientras corrían las pruebas, no si el código hace lo correcto. Un ejemplo de mi propio trabajo es `minimo`: con una sola prueba como `minimo([4, -7, 2])` se ejecuta todo el ciclo y la función devuelve `-7`, que es correcto, así que el reporte habría marcado esa función como cubierta aunque el bug de `min_val = 0` seguía ahí. El error solo aparece con listas de números positivos, y la cobertura no distingue qué valores probé, solo si la línea corrió.
+
+Además, la cobertura no puede detectar código que **falta**. Tres de mis bugs fueron validaciones ausentes: `raiz_cuadrada` sin revisar los negativos, `descuento_apilado` sin limitar el total al 100 % y `kelvin_a_celsius` sin revisar el cero absoluto. Como no hay una línea que ejecutar, ningún reporte de cobertura las marca como faltantes. Tampoco evalúa la calidad de las pruebas: una prueba sin `assert` suma cobertura sin verificar nada.
 
 **¿Qué aprendí?**
-(...)
+
+Lo más importante fue cambiar la forma de pensar una prueba: en vez de confirmar que el código funciona, buscar la entrada que lo rompería (un negativo, un cero, un límite). Aprendí que una prueba en rojo es un hallazgo, no un fracaso: los seis bugs que encontré aparecieron porque una prueba falló, y cada fallo me obligó a decidir qué comportamiento era el correcto, como elegir entre limitar el descuento al 100 % o lanzar un error propio. También me quedó la estructura AAA, que hace las pruebas más fáciles de leer y de depurar, y herramientas concretas de pytest como `parametrize`, para cubrir muchos casos sin repetir código, y `pytest.approx`, necesario para comparar decimales por los errores de redondeo del punto flotante.
+
+Otra técnica que me sorprendió por lo útil fue la prueba de ida y vuelta: convertir un valor y regresarlo al original detecta fórmulas invertidas, como la de `kilometros_a_millas`, sin necesidad de saber el resultado correcto de antemano. 
