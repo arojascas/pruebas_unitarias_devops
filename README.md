@@ -128,23 +128,24 @@ Pruebas en verde (después de corregir, 53 casos):
 
 ![conversor en verde](img/conversor_verde.png)
 
-**Commits relacionados:** `fix: conversor (kelvin_a_celsius y kilometros_a_millas) + pruebas + informe del módulo`.
-
 ---
 
-## 5. Resumen de bugs
+## 4. Resumen de bugs
 
 | # | Módulo | Función | Entrada | Erróneo vs esperado | Corrección |
 |---|---|---|---|---|---|
-| 1 | calculadora | `raiz_cuadrada` | `-4` | complejo vs `ValueError` | validar negativos |
-| 2 | calculadora | `minimo` | `[5, 3, 8]` | `0` vs `3` | iniciar en `lista[0]` |
-| 3 | descuentos | (...) | (...) | (...) | (...) |
-| 4 | descuentos | (...) | (...) | (...) | (...) |
-| 5 | (módulo 3) | (...) | (...) | (...) | (...) |
+| 1 | calculadora | `raiz_cuadrada` | `-4` | número complejo (`1.2e-16+2j`) vs `ValueError` | validar que el número no sea negativo antes de calcular |
+| 2 | calculadora | `minimo` | `[5, 3, 8]` y `[10]` | `0` vs `3` y `10` | iniciar `min_val` en `lista[0]` en vez de `0` |
+| 3 | descuentos | `calcular_precio_final` | `(100, 10, 20)` | `90` vs `88` | calcular el impuesto sobre `precio_con_descuento` y no sobre el precio original |
+| 4 | descuentos | `descuento_apilado` | `(100, [60, 50])` | `ValueError` con mensaje confuso vs `0` | limitar el descuento total con `min(total_descuento, 100)` |
+| 5 | conversor | `kelvin_a_celsius` | `-1` | `-274.15` (sin error) vs `ValueError` | validar `if kelvin < 0` y lanzar `ValueError` |
+| 6 | conversor | `kilometros_a_millas` | `100` | `160.934` vs `≈ 62.137` | dividir por `1.60934` en vez de multiplicar |
+
+**Total:** 6 bugs corregidos en 3 módulos (2 por módulo), cada uno con su prueba que fallaba antes del fix y pasa después.
 
 ---
 
-## 6. Cobertura
+## 5. Cobertura
 
 Comando:
 
@@ -155,12 +156,10 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 Salida:
 
 ```
-(pega aquí la tabla completa)
 ```
 
 ![cobertura](img/cobertura.png)
 
-**Lectura de los resultados:** (qué módulos superaron el 85 %, cuáles quedaron más bajos y por qué, qué aparece en la columna `Miss`)
 
 ---
 
